@@ -12,6 +12,7 @@ GITHUB_ACCESS_TOKEN = os.environ['GITHUB_ACCESS_TOKEN']
 GITHUB_REF = os.environ['GITHUB_REF']
 GITHUB_REPOSITORY = os.environ['GITHUB_REPOSITORY']
 GITHUB_ACTOR = os.environ['GITHUB_ACTOR']
+DRAFT = os.environ['DRAFT']
 LABEL = [x.strip() for x in os.environ['LABEL'].split(',')] if "LABEL" in os.environ else []
 ASSIGN = os.environ['ASSIGN'].lower() == "true" if "ASSIGN" in os.environ else True
 LABEL_SAME_AS_ISSUE = os.environ['LABEL_SAME_AS_ISSUE'].lower() == "true" if "LABEL_SAME_AS_ISSUE" in os.environ else True
@@ -56,7 +57,8 @@ class SubmitPullRequest():
                 title=pr_title,
                 body=self.pr_body,
                 head=GITHUB_REF,
-                base=self.repo.default_branch)
+                base=self.repo.default_branch
+                draft=DRAFT)
             return pr
         except:
             self.error_handler("Failed to create pull request")
