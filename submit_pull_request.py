@@ -22,12 +22,7 @@ class SubmitPullRequest():
     def __init__(self):
         self.branch_id = self.parse_branch_name()
         self.repo = Github(GITHUB_ACCESS_TOKEN).get_repo(GITHUB_REPOSITORY)
-        try:
-            self.issue = self.get_issue()
-        except Exception as e:
-            print("koko")
-            if not DEBUG:
-                raise e
+        self.issue = self.get_issue()
         self.pr_body = self.build_pr_body()
         self.pr = self.create_pull_request()
         self.add_label_to_pull_request()
@@ -43,7 +38,7 @@ class SubmitPullRequest():
     def add_label_to_pull_request(self):
         try:
             if LABEL_SAME_AS_ISSUE:
-                for label in self.issue.labels or []:
+                for label in self.issue.labels:
                     self.pr.add_to_labels(label.name)
             for label in (set(LABEL) & set([x.name for x in self.repo.get_labels()])):
                 self.pr.add_to_labels(label)
@@ -56,15 +51,14 @@ class SubmitPullRequest():
 
     def create_pull_request(self):
         try:
-            issue_number = self.issue.number or 0
-            title = self.issue.title or 'temporary title'
+            issue_number = self.issue.number
+            title = self.issue.title
             pr_title = "ref #{} {}".format(issue_number, title)
             pr = self.repo.create_pull(
                 title=pr_title,
                 body=self.pr_body,
                 head=GITHUB_REF,
-                base=self.repo.default_branch,
-                draft=DRAFT)
+                base=self.repo.default_branch)
             return pr
         except:
             self.error_handler("Failed to create pull request")
@@ -77,7 +71,10 @@ class SubmitPullRequest():
         try:
             issue = self.repo.get_issue(self.branch_id)
         except:
-            self.error_handler("Failed to get the issue")
+            if DEBUG:
+                issue = IssueMock()
+            else:
+                self.error_handler("Failed to get the issue")
         if issue:
             return issue
         else:
@@ -103,13 +100,17 @@ class SubmitPullRequest():
 
     def replace_tag_to_issue_information(self, content):
         if '{submit_pull_request_issue_info}' in content:
-            issue_number = self.issue.number or 0
-            title = self.issue.title or 'temporary title'
+            issue_number = self.issue.number
+            title = self.issue.title
             issue_info = "ref #{} {}\n".format(issue_number, title)
             return content.format(submit_pull_request_issue_info=issue_info)
         else:
             return content
 
+class IssueMock:
+    number = 0
+    title = 'temporary title'
+    labels = []
 
 if __name__ == '__main__':
     SubmitPullRequest()

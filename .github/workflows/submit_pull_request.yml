@@ -1,7 +1,7 @@
 name: Submit Pull Request
 
 on:
-  create:
+  push:
 
 jobs:
   SubmitPullRequest:
