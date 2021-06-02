@@ -16,17 +16,15 @@ DRAFT = os.environ['DRAFT']
 LABEL = [x.strip() for x in os.environ['LABEL'].split(',')] if "LABEL" in os.environ else []
 ASSIGN = os.environ['ASSIGN'].lower() == "true" if "ASSIGN" in os.environ else True
 LABEL_SAME_AS_ISSUE = os.environ['LABEL_SAME_AS_ISSUE'].lower() == "true" if "LABEL_SAME_AS_ISSUE" in os.environ else True
-DEBUG = os.environ['DEBUG'] or False
+DEBUG = True if os.environ['DEBUG'].lower() == "true" else False
 
 class SubmitPullRequest():
     def __init__(self):
         self.branch_id = self.parse_branch_name()
         self.repo = Github(GITHUB_ACCESS_TOKEN).get_repo(GITHUB_REPOSITORY)
-        try:
-            self.issue = self.get_issue()
-        except as e:
-            if DEBUG == False:
-                raise e
+        print('debug kokokokoko debug kokokokoko')
+        print(DEBUG)
+        # self.issue = self.get_issue()
         self.pr_body = self.build_pr_body()
         self.pr = self.create_pull_request()
         self.add_label_to_pull_request()
