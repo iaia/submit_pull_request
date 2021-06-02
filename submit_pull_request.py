@@ -16,12 +16,18 @@ DRAFT = os.environ['DRAFT']
 LABEL = [x.strip() for x in os.environ['LABEL'].split(',')] if "LABEL" in os.environ else []
 ASSIGN = os.environ['ASSIGN'].lower() == "true" if "ASSIGN" in os.environ else True
 LABEL_SAME_AS_ISSUE = os.environ['LABEL_SAME_AS_ISSUE'].lower() == "true" if "LABEL_SAME_AS_ISSUE" in os.environ else True
+DEBUG = True if os.environ['DEBUG'].lower() == "true" else False
 
 class SubmitPullRequest():
     def __init__(self):
         self.branch_id = self.parse_branch_name()
         self.repo = Github(GITHUB_ACCESS_TOKEN).get_repo(GITHUB_REPOSITORY)
-        self.issue = self.get_issue()
+        try:
+            self.issue = self.get_issue()
+        except Exception as e:
+            print("koko")
+            if not DEBUG:
+                raise e
         self.pr_body = self.build_pr_body()
         self.pr = self.create_pull_request()
         self.add_label_to_pull_request()
@@ -37,7 +43,7 @@ class SubmitPullRequest():
     def add_label_to_pull_request(self):
         try:
             if LABEL_SAME_AS_ISSUE:
-                for label in self.issue.labels:
+                for label in self.issue.labels or []:
                     self.pr.add_to_labels(label.name)
             for label in (set(LABEL) & set([x.name for x in self.repo.get_labels()])):
                 self.pr.add_to_labels(label)
@@ -50,14 +56,14 @@ class SubmitPullRequest():
 
     def create_pull_request(self):
         try:
-            issue_number = self.issue.number
-            title = self.issue.title
+            issue_number = self.issue.number or 0
+            title = self.issue.title or 'temporary title'
             pr_title = "ref #{} {}".format(issue_number, title)
             pr = self.repo.create_pull(
                 title=pr_title,
                 body=self.pr_body,
                 head=GITHUB_REF,
-                base=self.repo.default_branch
+                base=self.repo.default_branch,
                 draft=DRAFT)
             return pr
         except:
@@ -97,8 +103,8 @@ class SubmitPullRequest():
 
     def replace_tag_to_issue_information(self, content):
         if '{submit_pull_request_issue_info}' in content:
-            issue_number = self.issue.number
-            title = self.issue.title
+            issue_number = self.issue.number or 0
+            title = self.issue.title or 'temporary title'
             issue_info = "ref #{} {}\n".format(issue_number, title)
             return content.format(submit_pull_request_issue_info=issue_info)
         else:
