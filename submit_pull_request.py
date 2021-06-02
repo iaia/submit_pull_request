@@ -42,7 +42,7 @@ class SubmitPullRequest():
     def add_label_to_pull_request(self):
         try:
             if LABEL_SAME_AS_ISSUE:
-                for label in self.issue.labels:
+                for label in self.issue.labels or []:
                     self.pr.add_to_labels(label.name)
             for label in (set(LABEL) & set([x.name for x in self.repo.get_labels()])):
                 self.pr.add_to_labels(label)
@@ -55,8 +55,8 @@ class SubmitPullRequest():
 
     def create_pull_request(self):
         try:
-            issue_number = self.issue.number
-            title = self.issue.title
+            issue_number = self.issue.number or 0
+            title = self.issue.title or 'temporary title'
             pr_title = "ref #{} {}".format(issue_number, title)
             pr = self.repo.create_pull(
                 title=pr_title,
@@ -102,8 +102,8 @@ class SubmitPullRequest():
 
     def replace_tag_to_issue_information(self, content):
         if '{submit_pull_request_issue_info}' in content:
-            issue_number = self.issue.number
-            title = self.issue.title
+            issue_number = self.issue.number or 0
+            title = self.issue.title or 'temporary title'
             issue_info = "ref #{} {}\n".format(issue_number, title)
             return content.format(submit_pull_request_issue_info=issue_info)
         else:
